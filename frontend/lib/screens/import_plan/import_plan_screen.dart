@@ -45,6 +45,15 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
     );
   }
 
+  Future<void> _copySampleTable() async {
+    await Clipboard.setData(
+        const ClipboardData(text: AppStrings.importSampleTable));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sample table copied to clipboard')),
+    );
+  }
+
   Future<void> _pickFile() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
@@ -304,7 +313,30 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            // The literal format string, monospaced + copyable.
+            Text(
+              AppStrings.importFormatHelp,
+              style: text.bodySmall?.copyWith(
+                color: scheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // AI prompt block: the literal text to paste into an AI tool.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    'AI prompt',
+                    style: text.labelLarge?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
             Container(
               width: double.infinity,
               padding:
@@ -315,19 +347,20 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
                 border: Border.all(color: scheme.outlineVariant),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Expanded(
                     child: SelectableText(
                       AppStrings.importFormat,
                       style: TextStyle(
                         fontFamily: 'monospace',
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
+                        fontSize: 12.5,
+                        height: 1.4,
                       ),
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Copy format',
+                    tooltip: 'Copy prompt',
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.copy, size: 18),
                     onPressed: _copyFormat,
@@ -335,11 +368,56 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              AppStrings.importFormatHelp,
-              style: text.bodySmall?.copyWith(
-                color: scheme.onSecondaryContainer,
+            const SizedBox(height: 16),
+
+            // Sample table: visual reference for building the sheet manually.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Sample table (build manually)',
+                    style: text.labelLarge?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SelectableText(
+                        AppStrings.importSampleTable,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11.5,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copy sample table',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: _copySampleTable,
+                  ),
+                ],
               ),
             ),
           ],
