@@ -1,0 +1,38 @@
+name: dsa_tracker
+description: A daily DSA preparation tracker (Flutter client).
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Networking
+  http: ^1.2.0
+
+  # State management (lightweight, simplest maintainable option)
+  provider: ^6.1.2
+
+  # Local persistence / config / offline cache
+  shared_preferences: ^2.2.3
+
+  # File picking for Excel import
+  file_picker: ^8.0.0
+
+  # Formatting
+  intl: ^0.19.0
+
+  # Local notifications (optional feature; app works without it)
+  flutter_local_notifications: ^17.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,12 @@
+{
+  "name": "DSA Daily Tracker",
+  "short_name": "DSA Tracker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#4F46E5",
+  "description": "Track your daily DSA preparation.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": []
+}

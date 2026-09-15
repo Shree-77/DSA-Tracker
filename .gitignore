@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.env
+.env
+!.env.example
+
+# Test / coverage
+.pytest_cache/
+.coverage
+
+# SQLite
+*.db
+*.sqlite3
+
+# Flutter / Dart
+frontend/.dart_tool/
+frontend/.packages
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/ios/Pods/
+frontend/android/.gradle/
+frontend/**/GeneratedPluginRegistrant.*
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

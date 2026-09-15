@@ -1,0 +1,42 @@
+# Local development stack: PostgreSQL + FastAPI backend.
+# Start everything with:  docker compose up --build
+#
+# The backend container runs `alembic upgrade head` on startup, so the schema
+# is created automatically. The API is then available on http://localhost:8000.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: dsa_tracker_db
+    environment:
+      POSTGRES_USER: dsa
+      POSTGRES_PASSWORD: dsa
+      POSTGRES_DB: dsa_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - dsa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dsa -d dsa_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dsa_tracker_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://dsa:dsa@db:5432/dsa_tracker
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8080"
+      APP_ENV: development
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+
+volumes:
+  dsa_pgdata:
