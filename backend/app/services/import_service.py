@@ -61,6 +61,12 @@ class ImportService:
             raise ImportValidationError(errors)
 
         try:
+            # Single-user app: a new import replaces the existing plan so we
+            # never accumulate orphaned, invisible plans in the database.
+            # Deleting cascades to StudyDay and DailyTracker rows.
+            for existing in self.plans.list():
+                self.plans.delete(existing)
+
             plan = self.plans.create(
                 name=result.plan_name,
                 description=result.description,

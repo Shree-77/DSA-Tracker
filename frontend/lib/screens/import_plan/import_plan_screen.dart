@@ -2,8 +2,10 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../models/import_preview.dart';
 import '../../services/plan_api_service.dart';
@@ -33,6 +35,14 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
   void dispose() {
     _planNameCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _copyFormat() async {
+    await Clipboard.setData(const ClipboardData(text: AppStrings.importFormat));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.importFormatCopied)),
+    );
   }
 
   Future<void> _pickFile() async {
@@ -137,6 +147,9 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          _formatCard(context),
+          const SizedBox(height: 24),
+
           Text('1. Choose your .xlsx file',
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -217,6 +230,21 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
               _kv('Tracker rows', '${p.trackersDetected}'),
             const SizedBox(height: 8),
             _kv('Date', range),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    size: 18, color: Theme.of(context).colorScheme.tertiary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.replacesExistingPlan,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -241,6 +269,78 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _formatCard(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Card(
+      color: scheme.secondaryContainer,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline,
+                    size: 20, color: scheme.onSecondaryContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.importFormatLabel,
+                    style: text.titleMedium?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // The literal format string, monospaced + copyable.
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: SelectableText(
+                      AppStrings.importFormat,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copy format',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: _copyFormat,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.importFormatHelp,
+              style: text.bodySmall?.copyWith(
+                color: scheme.onSecondaryContainer,
+              ),
             ),
           ],
         ),

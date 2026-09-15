@@ -77,6 +77,23 @@ def test_invalid_difficulty_rejected(db_session):
     assert any("Invalid difficulty" in e for e in exc.value.details["errors"])
 
 
+def test_reimport_replaces_existing_plan(db_session):
+    """A second import replaces the first plan instead of accumulating."""
+    content = fixtures.build_valid_workbook()
+    first = ImportService(db_session).import_plan(content, START)
+    second = ImportService(db_session).import_plan(content, START)
+
+    plans = db_session.execute(select(Plan)).scalars().all()
+    assert len(plans) == 1
+    assert plans[0].id == second.plan.id
+    assert plans[0].id != first.plan.id
+
+    # Old plan's days must be gone (only the new plan's days remain).
+    days = db_session.execute(select(StudyDay)).scalars().all()
+    assert all(d.plan_id == second.plan.id for d in days)
+    assert len(days) == 56
+
+
 def test_failed_import_rolls_back_completely(db_session):
     content = fixtures.build_workbook_invalid_row()
     with pytest.raises(ImportValidationError):
