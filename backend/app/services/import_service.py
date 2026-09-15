@@ -23,8 +23,9 @@ from app.utils.excel_parser import ParseResult, parse_workbook
 
 
 class ImportService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, user_id: int) -> None:
         self.db = db
+        self.user_id = user_id
         self.plans = PlanRepository(db)
         self.days = StudyDayRepository(db)
         self.trackers = TrackerRepository(db)
@@ -64,10 +65,11 @@ class ImportService:
             # Single-user app: a new import replaces the existing plan so we
             # never accumulate orphaned, invisible plans in the database.
             # Deleting cascades to StudyDay and DailyTracker rows.
-            for existing in self.plans.list():
+            for existing in self.plans.list(self.user_id):
                 self.plans.delete(existing)
 
             plan = self.plans.create(
+                user_id=self.user_id,
                 name=result.plan_name,
                 description=result.description,
                 total_days=len(result.days),

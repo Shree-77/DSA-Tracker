@@ -19,8 +19,9 @@ from app.schemas.tracker import TrackerResponse, TrackerUpdate
 
 
 class StudyDayService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, user_id: int) -> None:
         self.db = db
+        self.user_id = user_id
         self.plans = PlanRepository(db)
         self.days = StudyDayRepository(db)
         self.trackers = TrackerRepository(db)
@@ -82,14 +83,16 @@ class StudyDayService:
 
     def _require_day(self, study_day_id: int) -> StudyDay:
         day = self.days.get(study_day_id)
-        if day is None:
+        # Verify the day belongs to a plan owned by the current user. We treat
+        # a foreign day as "not found" to avoid leaking existence.
+        if day is None or self.plans.get(day.plan_id, self.user_id) is None:
             raise NotFoundError(
                 f"Study day {study_day_id} not found", code="STUDY_DAY_NOT_FOUND"
             )
         return day
 
     def _require_day_by_number(self, plan_id: int, day_number: int) -> StudyDay:
-        if self.plans.get(plan_id) is None:
+        if self.plans.get(plan_id, self.user_id) is None:
             raise NotFoundError(f"Plan {plan_id} not found", code="PLAN_NOT_FOUND")
         day = self.days.get_by_plan_and_day(plan_id, day_number)
         if day is None:

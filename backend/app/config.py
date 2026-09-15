@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,6 +34,19 @@ class Settings(BaseSettings):
         description="Comma-separated list of allowed CORS origins.",
     )
 
+    # Auth -------------------------------------------------------------------
+    # NOTE: override JWT_SECRET_KEY in every non-local environment. The default
+    # below is intentionally insecure and is rejected when APP_ENV=production.
+    jwt_secret_key: str = Field(
+        default="CHANGE_ME_INSECURE_DEV_SECRET",
+        description="Secret used to sign JWT access tokens.",
+    )
+    jwt_algorithm: str = Field(default="HS256")
+    access_token_expire_minutes: int = Field(
+        default=60 * 24 * 7,  # 7 days — simple, long-lived token for this app.
+        description="Access-token lifetime in minutes.",
+    )
+
     # App --------------------------------------------------------------------
     app_env: str = Field(default="development", description="development|production")
     log_level: str = Field(default="INFO")
@@ -46,6 +59,17 @@ class Settings(BaseSettings):
     @classmethod
     def _normalise_env(cls, value: str) -> str:
         return value.strip().lower()
+
+    @model_validator(mode="after")
+    def _guard_secret_in_production(self) -> "Settings":
+        if self.app_env == "production" and (
+            not self.jwt_secret_key
+            or self.jwt_secret_key == "CHANGE_ME_INSECURE_DEV_SECRET"
+        ):
+            raise ValueError(
+                "JWT_SECRET_KEY must be set to a strong value when APP_ENV=production."
+            )
+        return self
 
     @property
     def is_production(self) -> bool:

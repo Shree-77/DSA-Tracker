@@ -61,6 +61,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clear all in-memory + cached plan data. Called on sign-out so the next
+  /// user never sees the previous user's cached plan.
+  void reset() {
+    plan = null;
+    today = null;
+    progress = null;
+    days = [];
+    offline = false;
+    errorMessage = null;
+    state = LoadState.idle;
+    _cache.clear();
+    notifyListeners();
+  }
+
   Future<void> _loadPlanData() async {
     final results = await Future.wait([
       _api.getToday(plan!.id),

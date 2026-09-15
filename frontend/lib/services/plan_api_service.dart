@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
 
+import '../core/network/api.dart';
 import '../core/network/api_client.dart';
 import '../models/import_preview.dart';
 import '../models/plan.dart';
@@ -13,7 +14,7 @@ import '../models/tracker.dart';
 
 /// All backend calls related to plans, days, progress, and trackers.
 class PlanApiService {
-  PlanApiService({ApiClient? client}) : _client = client ?? ApiClient();
+  PlanApiService({ApiClient? client}) : _client = client ?? apiClient;
 
   final ApiClient _client;
   static final _dateFmt = DateFormat('yyyy-MM-dd');

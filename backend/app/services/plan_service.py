@@ -1,4 +1,4 @@
-"""Plan service: plan retrieval, today's day, and deletion."""
+"""Plan service: plan retrieval, today's day, and deletion (per user)."""
 
 from __future__ import annotations
 
@@ -14,13 +14,14 @@ from app.schemas.study_day import StudyDayResponse, TodayResponse
 
 
 class PlanService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, user_id: int) -> None:
         self.db = db
+        self.user_id = user_id
         self.plans = PlanRepository(db)
         self.days = StudyDayRepository(db)
 
     def list_plans(self) -> list[PlanResponse]:
-        return [PlanResponse.model_validate(p) for p in self.plans.list()]
+        return [PlanResponse.model_validate(p) for p in self.plans.list(self.user_id)]
 
     def get_plan(self, plan_id: int) -> PlanResponse:
         plan = self._require_plan(plan_id)
@@ -37,7 +38,7 @@ class PlanService:
         return [StudyDayResponse.model_validate(d) for d in days]
 
     def get_today(self, plan_id: int, today: date | None = None) -> TodayResponse:
-        plan = self._require_plan(plan_id)
+        self._require_plan(plan_id)
         today = today or date.today()
 
         days = self.days.list_for_plan(plan_id)
@@ -89,7 +90,7 @@ class PlanService:
         )
 
     def _require_plan(self, plan_id: int) -> Plan:
-        plan = self.plans.get(plan_id)
+        plan = self.plans.get(plan_id, self.user_id)
         if plan is None:
             raise NotFoundError(f"Plan {plan_id} not found", code="PLAN_NOT_FOUND")
         return plan

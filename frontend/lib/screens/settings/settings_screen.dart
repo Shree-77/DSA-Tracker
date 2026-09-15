@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/notification_service.dart';
 import '../import_plan/import_plan_screen.dart';
@@ -35,12 +36,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final theme = context.watch<ThemeProvider>();
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // Account
+          _sectionTitle(context, 'Account'),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.account_circle_outlined),
+              title: Text(auth.username ?? 'Signed in'),
+              subtitle: const Text('Tap to sign out'),
+              trailing: const Icon(Icons.logout),
+              onTap: () => _confirmLogout(context),
+            ),
+          ),
+          const SizedBox(height: 8),
+
           // Current plan
           _sectionTitle(context, 'Current Plan'),
           Card(
@@ -176,6 +191,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Plan deleted')),
       );
+    }
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final app = context.read<AppState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You can sign back in anytime with your username.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await auth.logout();
+      app.reset();
+      // AuthGate rebuilds and shows the login screen automatically.
     }
   }
 }

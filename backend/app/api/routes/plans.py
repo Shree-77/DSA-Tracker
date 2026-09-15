@@ -1,7 +1,7 @@
 """Plan-related routes.
 
 Route handlers stay thin: they parse input and delegate to services. No
-database logic lives here.
+database logic lives here. Every route is scoped to the authenticated user.
 """
 
 from __future__ import annotations
@@ -12,8 +12,10 @@ from typing import List
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.database import get_db
 from app.exceptions import ValidationAppError
+from app.models import User
 from app.schemas.plan import ImportPreviewResponse, ImportSummary, PlanResponse
 from app.schemas.study_day import StudyDayResponse, TodayResponse
 from app.services import ImportService, PlanService
@@ -39,10 +41,11 @@ async def import_plan(
     file: UploadFile = File(...),
     plan_name: str | None = Form(default=None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ImportSummary:
     _validate_upload(file)
     content = await file.read()
-    return ImportService(db).import_plan(content, start_date, plan_name)
+    return ImportService(db, current_user.id).import_plan(content, start_date, plan_name)
 
 
 @router.post("/import/preview", response_model=ImportPreviewResponse)
@@ -51,30 +54,46 @@ async def preview_import(
     file: UploadFile = File(...),
     plan_name: str | None = Form(default=None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ImportPreviewResponse:
     _validate_upload(file)
     content = await file.read()
-    return ImportService(db).preview(content, start_date, plan_name)
+    return ImportService(db, current_user.id).preview(content, start_date, plan_name)
 
 
 @router.get("", response_model=List[PlanResponse])
-def list_plans(db: Session = Depends(get_db)) -> List[PlanResponse]:
-    return PlanService(db).list_plans()
+def list_plans(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> List[PlanResponse]:
+    return PlanService(db, current_user.id).list_plans()
 
 
 @router.get("/{plan_id}", response_model=PlanResponse)
-def get_plan(plan_id: int, db: Session = Depends(get_db)) -> PlanResponse:
-    return PlanService(db).get_plan(plan_id)
+def get_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> PlanResponse:
+    return PlanService(db, current_user.id).get_plan(plan_id)
 
 
 @router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_plan(plan_id: int, db: Session = Depends(get_db)) -> None:
-    PlanService(db).delete_plan(plan_id)
+def delete_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    PlanService(db, current_user.id).delete_plan(plan_id)
 
 
 @router.get("/{plan_id}/days", response_model=List[StudyDayResponse])
-def list_days(plan_id: int, db: Session = Depends(get_db)) -> List[StudyDayResponse]:
-    return PlanService(db).list_days(plan_id)
+def list_days(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> List[StudyDayResponse]:
+    return PlanService(db, current_user.id).list_days(plan_id)
 
 
 @router.get("/{plan_id}/today", response_model=TodayResponse)
@@ -82,5 +101,6 @@ def get_today(
     plan_id: int,
     today: date | None = Query(default=None, description="Override for testing."),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> TodayResponse:
-    return PlanService(db).get_today(plan_id, today)
+    return PlanService(db, current_user.id).get_today(plan_id, today)

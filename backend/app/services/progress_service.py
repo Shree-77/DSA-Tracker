@@ -18,17 +18,18 @@ from app.schemas.progress import (
 
 
 class ProgressService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, user_id: int) -> None:
         self.db = db
+        self.user_id = user_id
         self.plans = PlanRepository(db)
         self.days = StudyDayRepository(db)
 
     def get_progress(self, plan_id: int, today: date | None = None) -> ProgressResponse:
-        if self.plans.get(plan_id) is None:
+        if self.plans.get(plan_id, self.user_id) is None:
             raise NotFoundError(f"Plan {plan_id} not found", code="PLAN_NOT_FOUND")
 
         today = today or date.today()
-        plan = self.plans.get_with_days(plan_id)
+        plan = self.plans.get_with_days(plan_id, self.user_id)
         days = list(plan.days) if plan else []
 
         total = len(days)
