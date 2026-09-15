@@ -5,6 +5,8 @@ import '../../providers/app_state.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/notification_service.dart';
+import '../ai/ai_plan_screen.dart';
+import '../ai/ai_settings_screen.dart';
 import '../import_plan/import_plan_screen.dart';
 import '../plan/plan_switcher_screen.dart';
 
@@ -92,6 +94,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _openSwitcher(context),
               ),
             ),
+          const SizedBox(height: 8),
+
+          // AI
+          _sectionTitle(context, 'AI Study Plans'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome),
+                  title: const Text('Create plan with AI'),
+                  subtitle: const Text('Chat to design a plan, then import it'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _createWithAi(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.key),
+                  title: const Text('AI API key'),
+                  subtitle: const Text('Manage your NVIDIA API key'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AiSettingsScreen(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
 
           // Daily study goal
@@ -189,6 +220,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       MaterialPageRoute(builder: (_) => const ImportPlanScreen()),
     );
     if (imported == true) await app.bootstrap();
+  }
+
+  Future<void> _createWithAi(BuildContext context) async {
+    final app = context.read<AppState>();
+    final imported = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AiPlanScreen()),
+    );
+    if (imported == true) {
+      await app.bootstrap();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('AI plan created 🎉')),
+      );
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

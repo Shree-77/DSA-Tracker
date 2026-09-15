@@ -47,6 +47,30 @@ class Settings(BaseSettings):
         description="Access-token lifetime in minutes.",
     )
 
+    # AI ---------------------------------------------------------------------
+    # Key used to encrypt users' provider API keys at rest (Fernet). Any
+    # sufficiently-strong string works; it is hashed to a 32-byte key. MUST be
+    # set and stable in production — rotating it invalidates stored keys.
+    ai_encryption_key: str = Field(
+        default="CHANGE_ME_INSECURE_AI_ENCRYPTION_KEY",
+        description="Secret used to encrypt stored provider API keys.",
+    )
+    # NVIDIA NIM is OpenAI-compatible; base URL + default model.
+    ai_base_url: str = Field(
+        default="https://integrate.api.nvidia.com/v1",
+        description="OpenAI-compatible base URL for the LLM provider.",
+    )
+    ai_default_model: str = Field(
+        default="meta/llama-3.1-70b-instruct",
+        description="Default model slug used when the user has not chosen one.",
+    )
+    ai_request_timeout: float = Field(
+        default=60.0, description="Timeout (seconds) for provider requests."
+    )
+    ai_max_days: int = Field(
+        default=180, description="Hard cap on days in a generated plan."
+    )
+
     # App --------------------------------------------------------------------
     app_env: str = Field(default="development", description="development|production")
     log_level: str = Field(default="INFO")
@@ -62,13 +86,21 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _guard_secret_in_production(self) -> "Settings":
-        if self.app_env == "production" and (
-            not self.jwt_secret_key
-            or self.jwt_secret_key == "CHANGE_ME_INSECURE_DEV_SECRET"
-        ):
-            raise ValueError(
-                "JWT_SECRET_KEY must be set to a strong value when APP_ENV=production."
-            )
+        if self.app_env == "production":
+            if (
+                not self.jwt_secret_key
+                or self.jwt_secret_key == "CHANGE_ME_INSECURE_DEV_SECRET"
+            ):
+                raise ValueError(
+                    "JWT_SECRET_KEY must be set to a strong value when APP_ENV=production."
+                )
+            if (
+                not self.ai_encryption_key
+                or self.ai_encryption_key == "CHANGE_ME_INSECURE_AI_ENCRYPTION_KEY"
+            ):
+                raise ValueError(
+                    "AI_ENCRYPTION_KEY must be set to a strong value when APP_ENV=production."
+                )
         return self
 
     @property
