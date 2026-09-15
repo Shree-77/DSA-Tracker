@@ -20,7 +20,7 @@ class NotificationService {
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
     try {
-      await _plugin.initialize(settings);
+      await _plugin.initialize(settings: settings);
       _initialized = true;
     } catch (_) {
       // Notifications unavailable on this platform; ignore.
@@ -61,10 +61,10 @@ class NotificationService {
 
     try {
       await _plugin.show(
-        1,
-        'Your DSA session is waiting for you.',
-        "Today's task: $task",
-        details,
+        id: 1,
+        title: 'Your DSA session is waiting for you.',
+        body: "Today's task: $task",
+        notificationDetails: details,
       );
     } catch (_) {
       // Ignore platform failures.

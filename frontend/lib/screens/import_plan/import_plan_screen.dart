@@ -36,19 +36,21 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx', 'xlsm'],
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) return;
-    final file = result.files.first;
-    if (file.bytes == null) {
+    if (result.isEmpty) return;
+    final file = result.first;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
       setState(() => _error = 'Could not read the selected file.');
       return;
     }
+
     setState(() {
-      _bytes = file.bytes;
+      _bytes = bytes;
       _filename = file.name;
       _preview = null;
       _error = null;

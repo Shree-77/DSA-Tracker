@@ -21,18 +21,18 @@ dependencies:
   shared_preferences: ^2.2.3
 
   # File picking for Excel import
-  file_picker: ^8.0.0
+  file_picker: ^13.0.0
 
   # Formatting
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # Local notifications (optional feature; app works without it)
-  flutter_local_notifications: ^17.1.2
+  flutter_local_notifications: ^22.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

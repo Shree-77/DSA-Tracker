@@ -24,7 +24,16 @@ class AppConfig {
   static const String developmentUrl = 'http://localhost:8000';
   static const String androidEmulatorUrl = 'http://10.0.2.2:8000';
 
-  static String _baseUrl = _fromEnv.isNotEmpty ? _fromEnv : developmentUrl;
+  static String _normalizeBaseUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return developmentUrl;
+    }
+    return trimmed.replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  static String _baseUrl =
+      _normalizeBaseUrl(_fromEnv.isNotEmpty ? _fromEnv : developmentUrl);
 
   static String get baseUrl => _baseUrl;
 
@@ -33,14 +42,14 @@ class AppConfig {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_prefsKey);
     if (saved != null && saved.isNotEmpty) {
-      _baseUrl = saved;
+      _baseUrl = _normalizeBaseUrl(saved);
     } else if (_fromEnv.isNotEmpty) {
-      _baseUrl = _fromEnv;
+      _baseUrl = _normalizeBaseUrl(_fromEnv);
     }
   }
 
   static Future<void> setBaseUrl(String url) async {
-    _baseUrl = url.trim();
+    _baseUrl = _normalizeBaseUrl(url);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, _baseUrl);
   }
