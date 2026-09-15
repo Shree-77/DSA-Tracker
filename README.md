@@ -1,16 +1,16 @@
-# DSA Daily Tracker
+# Study Plan Tracker
 
-A full-stack application for tracking daily Data Structures & Algorithms (DSA)
-preparation. Import a study plan from an Excel workbook, see what to study today,
-mark days complete, record study time / problems / confidence, and track your
-progress and streaks.
+A full-stack application for tracking any daily study plan — DSA prep, exam
+revision, a course syllabus, a language, a fitness plan, anything. Import a
+study plan from an Excel workbook, see what to study today, mark days complete,
+record study time / problems / confidence, and track your progress and streaks.
 
-The plan is **not** hard-coded — any `.xlsx` plan (any number of days, weeks, and
-phases) can be imported, and the same plan can be re-imported with a different
-start date.
+The plan is **not** hard-coded to any subject — any `.xlsx` plan (any number of
+days, weeks, and topics) can be imported, and re-importing a new sheet replaces
+the current plan (and its progress) with the new one.
 
 > **This repository was previously a Python-games learning repo. It has been
-> replaced with the DSA Daily Tracker full-stack application.**
+> replaced with the Study Plan Tracker full-stack application.**
 
 ---
 
@@ -122,11 +122,18 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
 
 ## Excel import
 
-Expected columns in the **DSA Plan** sheet (minor formatting differences are
+The importer is subject-agnostic — the sheet can describe any kind of study
+plan, not just DSA. The user-facing shorthand for the required columns is:
+
+```
+name,week,topic,level
+```
+
+which maps to the plan sheet's columns (minor header differences are
 tolerated — e.g. "Problems / Task" maps to the internal `task` field):
 
 ```
-Day | Week | Phase | Focus | Problems / Task | Difficulty | Status | Completed Date | Notes
+Day | Week | Phase | Focus | Problems / Task (name) | Difficulty (level) | Status | Completed Date | Notes
 ```
 
 An optional **Daily Tracker** sheet is imported into `DailyTracker` records when
@@ -135,12 +142,17 @@ present. An **Overview** sheet may supply the plan name/description.
 Import flow (in the app):
 
 1. **Import Plan** → pick `.xlsx` → choose a **start date** (mapped to Day 1).
-2. Review the preview (days / weeks / phases / date range + validation errors).
+2. Review the preview (days / weeks / topics / date range + validation errors).
 3. **Import Plan**. Imports run in a single transaction — invalid data is fully
    rolled back (never partially imported).
 
-Day *n* is scheduled on `start_date + (n − 1)` days. Re-importing with a
-different start date produces a new plan with new dates.
+Day *n* is scheduled on `start_date + (n − 1)` days.
+
+**Importing when a plan already exists:** there is only ever one active plan.
+Importing a new sheet **replaces** the existing plan — its days and tracker
+records are deleted (cascade) inside the same transaction before the new plan
+is created. If the new sheet fails validation, the rollback leaves the old
+plan untouched. There is no merge/append; it's always a full replace.
 
 ---
 

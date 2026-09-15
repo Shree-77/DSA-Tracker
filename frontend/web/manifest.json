@@ -1,11 +1,11 @@
 {
-  "name": "DSA Daily Tracker",
-  "short_name": "DSA Tracker",
+  "name": "Study Tracker",
+  "short_name": "Study Tracker",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#4F46E5",
-  "description": "Track your daily DSA preparation.",
+  "description": "Track your daily study plan progress.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": []

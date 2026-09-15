@@ -1,4 +1,4 @@
-"""Excel (.xlsx) workbook parser for DSA plans.
+"""Excel (.xlsx) workbook parser for study plans (any subject).
 
 Responsibilities:
   * Tolerate minor header/formatting differences (case, spaces, punctuation).
@@ -23,7 +23,7 @@ import pandas as pd
 
 from app.models.enums import StudyStatus
 
-PLAN_SHEET_CANDIDATES = ["DSA Plan", "Plan", "Sheet1"]
+PLAN_SHEET_CANDIDATES = ["Study Plan", "Plan", "DSA Plan", "Sheet1"]
 TRACKER_SHEET_CANDIDATES = ["Daily Tracker", "Tracker"]
 OVERVIEW_SHEET_CANDIDATES = ["Overview", "Meta", "Summary"]
 
@@ -245,7 +245,7 @@ def parse_workbook(content: bytes, plan_name: str | None = None) -> ParseResult:
         trackers = _parse_tracker_sheet(sheets[tracker_sheet_name], valid_day_numbers)
 
     if not resolved_name:
-        resolved_name = "DSA Preparation Plan"
+        resolved_name = "Imported Study Plan"
 
     return ParseResult(
         plan_name=resolved_name,

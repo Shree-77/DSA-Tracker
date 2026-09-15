@@ -50,9 +50,9 @@ class NotificationService {
 
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'dsa_daily',
-        'Daily DSA Reminder',
-        channelDescription: 'Reminders for your daily DSA session',
+        'study_daily',
+        'Daily Study Reminder',
+        channelDescription: 'Reminders for your daily study session',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -62,7 +62,7 @@ class NotificationService {
     try {
       await _plugin.show(
         id: 1,
-        title: 'Your DSA session is waiting for you.',
+        title: 'Your study session is waiting for you.',
         body: "Today's task: $task",
         notificationDetails: details,
       );

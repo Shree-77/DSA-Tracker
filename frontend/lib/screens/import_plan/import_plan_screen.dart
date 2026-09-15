@@ -143,7 +143,7 @@ class _ImportPlanScreenState extends State<ImportPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Import DSA Plan')),
+      appBar: AppBar(title: const Text('Import Study Plan')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

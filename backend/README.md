@@ -1,7 +1,7 @@
-# DSA Daily Tracker — Backend (FastAPI)
+# Study Plan Tracker — Backend (FastAPI)
 
-A clean, layered FastAPI backend for importing DSA study plans from Excel and
-tracking daily progress, streaks, and statistics.
+A clean, layered FastAPI backend for importing study plans (any subject) from
+Excel and tracking daily progress, streaks, and statistics.
 
 ## Tech stack
 

@@ -2,10 +2,10 @@
 class AppStrings {
   AppStrings._();
 
-  static const appName = 'DSA Tracker';
+  static const appName = 'Study Tracker';
 
   // Empty states
-  static const noPlanTitle = 'No DSA plan yet.';
+  static const noPlanTitle = 'No study plan yet.';
   static const noPlanBody = 'Import your Excel plan to get started.';
   static const importPlan = 'Import Plan';
 

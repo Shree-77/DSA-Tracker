@@ -71,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             title: const Text('Daily reminder'),
             subtitle:
-                const Text('Remind me about today\'s DSA session'),
+                const Text('Remind me about today\'s study session'),
             value: _notifications,
             onChanged: (v) async {
               await NotificationService.instance.setEnabled(v);

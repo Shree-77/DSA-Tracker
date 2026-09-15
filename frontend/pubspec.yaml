@@ -1,5 +1,5 @@
 name: dsa_tracker
-description: A daily DSA preparation tracker (Flutter client).
+description: Study Tracker - a daily study preparation tracker (Flutter client).
 publish_to: "none"
 version: 1.0.0+1
 
@@ -33,6 +33,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/icon.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  # Optional: use a separate image with safe-zone padding for adaptive icons.
+  # adaptive_icon_background: "#FFFFFF"
+  # adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  remove_alpha_ios: true

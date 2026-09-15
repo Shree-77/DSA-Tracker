@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     app_env: str = Field(default="development", description="development|production")
     log_level: str = Field(default="INFO")
 
-    app_name: str = "DSA Daily Tracker API"
+    app_name: str = "Study Plan Tracker API"
     app_version: str = "1.0.0"
     api_prefix: str = "/api"
 

@@ -1,6 +1,6 @@
-# DSA Daily Tracker — Frontend (Flutter)
+# Study Tracker — Frontend (Flutter)
 
-A clean, mobile-first Material 3 Flutter client for the DSA Daily Tracker API.
+A clean, mobile-first Material 3 Flutter client for the Study Tracker API.
 
 ## Tech stack
 

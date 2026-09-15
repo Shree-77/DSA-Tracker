@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Plan(Base):
-    """A DSA preparation plan created from an imported Excel workbook."""
+    """A study plan (any subject) created from an imported Excel workbook."""
 
     __tablename__ = "plans"
 
