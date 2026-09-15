@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_config.dart';
 import '../../providers/app_state.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/notification_service.dart';
@@ -15,7 +14,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _apiCtrl = TextEditingController(text: AppConfig.baseUrl);
   bool _notifications = false;
   final _goalCtrl = TextEditingController(text: '2');
 
@@ -29,7 +27,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _apiCtrl.dispose();
     _goalCtrl.dispose();
     super.dispose();
   }
@@ -108,44 +105,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-
-          // API server config
-          _sectionTitle(context, 'API Server'),
-          TextField(
-            controller: _apiCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Base URL',
-              hintText: 'http://localhost:8000',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              TextButton(
-                onPressed: () =>
-                    _apiCtrl.text = AppConfig.developmentUrl,
-                child: const Text('Localhost'),
-              ),
-              TextButton(
-                onPressed: () =>
-                    _apiCtrl.text = AppConfig.androidEmulatorUrl,
-                child: const Text('Android emulator'),
-              ),
-            ],
-          ),
-          FilledButton.tonal(
-            onPressed: () async {
-              await AppConfig.setBaseUrl(_apiCtrl.text);
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('API server saved')),
-              );
-              context.read<AppState>().bootstrap();
-            },
-            child: const Text('Save API Server'),
           ),
           const SizedBox(height: 24),
 

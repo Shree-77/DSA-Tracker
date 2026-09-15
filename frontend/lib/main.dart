@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'core/constants/app_config.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/app_state.dart';
@@ -12,8 +11,7 @@ import 'screens/home_shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load persisted API base URL and theme before the first frame.
-  await AppConfig.load();
+  // Load the theme before the first frame.
   final themeProvider = ThemeProvider();
   await themeProvider.load();
   await NotificationService.instance.init();

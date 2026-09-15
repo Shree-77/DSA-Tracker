@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for the release APK to make network requests to the backend. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="dsa_tracker"
         android:name="${applicationName}"

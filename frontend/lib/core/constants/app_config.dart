@@ -1,58 +1,14 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
-/// Runtime API configuration.
+/// Static API configuration.
 ///
-/// The base URL is configurable so the app can point at a development or
-/// production backend without hard-coding a URL throughout the codebase.
-///
-/// Resolution order:
-///   1. A value the user saved in Settings (SharedPreferences).
-///   2. `--dart-define=API_BASE_URL=...` provided at build/run time.
-///   3. The built-in development default.
+/// The backend URL is a compile-time constant. This is a single-user app that
+/// always talks to the deployed production backend, so there is no runtime
+/// override or Settings input.
 class AppConfig {
   AppConfig._();
 
-  static const String _prefsKey = 'api_base_url';
+  /// Deployed production backend. Trailing slash intentionally omitted so that
+  /// `apiPrefix` produces a clean `.../api` path.
+  static const String baseUrl = 'https://dsa-tracker-b5w9.onrender.com';
 
-  /// Compile-time override (e.g. `flutter run --dart-define=API_BASE_URL=...`).
-  static const String _fromEnv = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: '',
-  );
-
-  /// Sensible defaults for common targets.
-  static const String developmentUrl = 'http://localhost:8000';
-  static const String androidEmulatorUrl = 'http://10.0.2.2:8000';
-
-  static String _normalizeBaseUrl(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return developmentUrl;
-    }
-    return trimmed.replaceFirst(RegExp(r'/+$'), '');
-  }
-
-  static String _baseUrl =
-      _normalizeBaseUrl(_fromEnv.isNotEmpty ? _fromEnv : developmentUrl);
-
-  static String get baseUrl => _baseUrl;
-
-  /// Load the persisted base URL (call once during app start-up).
-  static Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_prefsKey);
-    if (saved != null && saved.isNotEmpty) {
-      _baseUrl = _normalizeBaseUrl(saved);
-    } else if (_fromEnv.isNotEmpty) {
-      _baseUrl = _normalizeBaseUrl(_fromEnv);
-    }
-  }
-
-  static Future<void> setBaseUrl(String url) async {
-    _baseUrl = _normalizeBaseUrl(url);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsKey, _baseUrl);
-  }
-
-  static String get apiPrefix => '$_baseUrl/api';
+  static String get apiPrefix => '$baseUrl/api';
 }
