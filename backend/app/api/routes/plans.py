@@ -16,7 +16,13 @@ from app.api.deps import get_current_user
 from app.database import get_db
 from app.exceptions import ValidationAppError
 from app.models import User
-from app.schemas.plan import ImportPreviewResponse, ImportSummary, PlanResponse
+from app.models.enums import PlanStatus
+from app.schemas.plan import (
+    ImportPreviewResponse,
+    ImportSummary,
+    PlanResponse,
+    PlanSelectResponse,
+)
 from app.schemas.study_day import StudyDayResponse, TodayResponse
 from app.services import ImportService, PlanService
 
@@ -63,10 +69,33 @@ async def preview_import(
 
 @router.get("", response_model=List[PlanResponse])
 def list_plans(
+    status: PlanStatus | None = Query(
+        default=None, description="Filter plans by lifecycle status."
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> List[PlanResponse]:
-    return PlanService(db, current_user.id).list_plans()
+    return PlanService(db, current_user.id).list_plans(status=status)
+
+
+@router.get("/history", response_model=List[PlanResponse])
+def plan_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> List[PlanResponse]:
+    """Plans the user has completed, most recently completed first."""
+    return PlanService(db, current_user.id).history()
+
+
+@router.post("/{plan_id}/select", response_model=PlanSelectResponse)
+def select_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> PlanSelectResponse:
+    """Switch the user's current/active plan (non-destructive)."""
+    plan = PlanService(db, current_user.id).select_plan(plan_id)
+    return PlanSelectResponse(plan=plan)
 
 
 @router.get("/{plan_id}", response_model=PlanResponse)

@@ -167,3 +167,99 @@ def test_delete_plan(client):
     resp = client.delete(f"/api/plans/{plan_id}")
     assert resp.status_code == 204
     assert client.get(f"/api/plans/{plan_id}").status_code == 404
+
+
+# -- Multiple plans: switching, history, auto-completion --------------------
+def test_multiple_plans_coexist_and_newest_is_selected(client):
+    first = _import(client)
+    second = _import(client)
+
+    plans = client.get("/api/plans").json()
+    assert {p["id"] for p in plans} == {first, second}
+
+    selected = [p for p in plans if p["is_selected"]]
+    assert len(selected) == 1
+    assert selected[0]["id"] == second
+
+
+def test_switch_active_plan(client):
+    first = _import(client)
+    second = _import(client)  # second becomes selected on import
+
+    resp = client.post(f"/api/plans/{first}/select")
+    assert resp.status_code == 200
+    assert resp.json()["plan"]["id"] == first
+    assert resp.json()["plan"]["is_selected"] is True
+
+    # Exactly one plan stays selected after switching.
+    plans = client.get("/api/plans").json()
+    selected = [p for p in plans if p["is_selected"]]
+    assert [p["id"] for p in selected] == [first]
+    assert next(p for p in plans if p["id"] == second)["is_selected"] is False
+
+
+def test_select_missing_plan_returns_404(client):
+    resp = client.post("/api/plans/9999/select")
+    assert resp.status_code == 404
+    assert resp.json()["error"]["code"] == "PLAN_NOT_FOUND"
+
+
+def test_filter_plans_by_status(client):
+    _import(client)
+    active = client.get("/api/plans", params={"status": "ACTIVE"}).json()
+    assert len(active) == 1
+    completed = client.get("/api/plans", params={"status": "COMPLETED"}).json()
+    assert completed == []
+
+
+def test_plan_auto_completes_when_all_days_terminal(client):
+    plan_id = _import(client)
+    total = client.get(f"/api/plans/{plan_id}").json()["total_days"]
+
+    # Mark every day DONE except the last.
+    for day_number in range(1, total):
+        r = client.patch(
+            f"/api/plans/{plan_id}/days/{day_number}", json={"status": "DONE"}
+        )
+        assert r.status_code == 200
+
+    assert client.get(f"/api/plans/{plan_id}").json()["status"] == "ACTIVE"
+
+    # Completing the final day flips the whole plan to COMPLETED.
+    client.patch(f"/api/plans/{plan_id}/days/{total}", json={"status": "DONE"})
+    done_plan = client.get(f"/api/plans/{plan_id}").json()
+    assert done_plan["status"] == "COMPLETED"
+    assert done_plan["completed_at"] is not None
+
+    # It now shows up in history.
+    history = client.get("/api/plans/history").json()
+    assert [p["id"] for p in history] == [plan_id]
+
+
+def test_reopening_a_day_reverts_completed_plan(client):
+    plan_id = _import(client)
+    total = client.get(f"/api/plans/{plan_id}").json()["total_days"]
+    for day_number in range(1, total + 1):
+        client.patch(
+            f"/api/plans/{plan_id}/days/{day_number}", json={"status": "DONE"}
+        )
+    assert client.get(f"/api/plans/{plan_id}").json()["status"] == "COMPLETED"
+
+    # Reopen one day -> plan returns to ACTIVE and leaves history.
+    client.patch(f"/api/plans/{plan_id}/days/1", json={"status": "IN_PROGRESS"})
+    reopened = client.get(f"/api/plans/{plan_id}").json()
+    assert reopened["status"] == "ACTIVE"
+    assert reopened["completed_at"] is None
+    assert client.get("/api/plans/history").json() == []
+
+
+def test_deleting_active_plan_promotes_another(client):
+    first = _import(client)
+    second = _import(client)  # selected
+
+    resp = client.delete(f"/api/plans/{second}")
+    assert resp.status_code == 204
+
+    plans = client.get("/api/plans").json()
+    assert [p["id"] for p in plans] == [first]
+    assert plans[0]["is_selected"] is True

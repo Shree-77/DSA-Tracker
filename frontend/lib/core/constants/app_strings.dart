@@ -52,7 +52,8 @@ Day  Week  Phase       Focus              Problems / Task              Difficult
 
   // Existing plan
   static const replacesExistingPlan =
-      'Importing a new plan replaces your current plan and its progress.';
+      'Importing adds a new plan and makes it your current one. Your existing '
+      'plans and their progress are kept — switch between them anytime.';
 
   // Error states
   static const genericError = 'Something went wrong.';

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from app.exceptions import NotFoundError
 from app.models import Plan
+from app.models.enums import PlanStatus
 from app.repositories import PlanRepository, StudyDayRepository
 from app.schemas.plan import PlanResponse
 from app.schemas.study_day import StudyDayResponse, TodayResponse
@@ -20,17 +21,73 @@ class PlanService:
         self.plans = PlanRepository(db)
         self.days = StudyDayRepository(db)
 
-    def list_plans(self) -> list[PlanResponse]:
-        return [PlanResponse.model_validate(p) for p in self.plans.list(self.user_id)]
+    def list_plans(self, status: PlanStatus | None = None) -> list[PlanResponse]:
+        return [
+            PlanResponse.model_validate(p)
+            for p in self.plans.list(self.user_id, status=status)
+        ]
+
+    def history(self) -> list[PlanResponse]:
+        """Completed plans, most recently completed first."""
+        completed = self.plans.list(self.user_id, status=PlanStatus.COMPLETED)
+        completed.sort(
+            key=lambda p: (p.completed_at or p.updated_at), reverse=True
+        )
+        return [PlanResponse.model_validate(p) for p in completed]
 
     def get_plan(self, plan_id: int) -> PlanResponse:
         plan = self._require_plan(plan_id)
         return PlanResponse.model_validate(plan)
 
+    def select_plan(self, plan_id: int) -> PlanResponse:
+        """Make the given plan the user's current/active plan.
+
+        Switching is non-destructive: it only moves the ``is_selected`` flag.
+        A completed plan can be re-selected to review or continue it.
+        """
+        plan = self._require_plan(plan_id)
+        self.plans.select_plan(plan)
+        self.db.commit()
+        self.db.refresh(plan)
+        return PlanResponse.model_validate(plan)
+
     def delete_plan(self, plan_id: int) -> None:
         plan = self._require_plan(plan_id)
+        was_selected = plan.is_selected
         self.plans.delete(plan)
+        # If we removed the active plan, promote the most recent remaining one
+        # so the user is never left without a current plan.
+        if was_selected:
+            remaining = self.plans.list(self.user_id)
+            if remaining:
+                self.plans.select_plan(remaining[0])
         self.db.commit()
+
+    def sync_completion(self, plan_id: int) -> PlanResponse:
+        """Recompute a plan's completion status from its days.
+
+        Marks the plan COMPLETED (stamping ``completed_at``) once every day is
+        DONE or SKIPPED, and reverts it to ACTIVE if a day is later reopened.
+        Called after any day status change; safe to call repeatedly.
+        """
+        plan = self._require_plan(plan_id)
+        total, remaining = self.plans.day_counts(plan_id)
+        is_complete = total > 0 and remaining == 0
+
+        changed = False
+        if is_complete and plan.status != PlanStatus.COMPLETED:
+            plan.status = PlanStatus.COMPLETED
+            plan.completed_at = datetime.now(timezone.utc)
+            changed = True
+        elif not is_complete and plan.status == PlanStatus.COMPLETED:
+            plan.status = PlanStatus.ACTIVE
+            plan.completed_at = None
+            changed = True
+
+        if changed:
+            self.db.commit()
+            self.db.refresh(plan)
+        return PlanResponse.model_validate(plan)
 
     def list_days(self, plan_id: int) -> list[StudyDayResponse]:
         self._require_plan(plan_id)

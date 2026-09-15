@@ -6,6 +6,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.enums import PlanStatus
+
 
 class PlanCreate(BaseModel):
     """Metadata used when creating a plan (optional overrides on import)."""
@@ -23,8 +25,17 @@ class PlanResponse(BaseModel):
     name: str
     description: str | None = None
     total_days: int
+    status: PlanStatus
+    is_selected: bool
+    completed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class PlanSelectResponse(BaseModel):
+    """Returned after switching the active/selected plan."""
+
+    plan: PlanResponse
 
 
 class ImportSummary(BaseModel):

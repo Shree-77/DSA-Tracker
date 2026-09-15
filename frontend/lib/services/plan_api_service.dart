@@ -20,16 +20,40 @@ class PlanApiService {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
 
   // -- Plans ---------------------------------------------------------------
-  Future<List<Plan>> listPlans() async {
-    final data = await _client.get('/plans') as List;
+  Future<List<Plan>> listPlans({PlanStatus? status}) async {
+    final query = status != null ? '?status=${status.wire}' : '';
+    final data = await _client.get('/plans$query') as List;
     return data
         .map((e) => Plan.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
   }
 
+  /// The user's currently selected ("current") plan, or null if none exist.
+  ///
+  /// Prefers the server-side `is_selected` flag so plan switching is sticky;
+  /// falls back to the first plan for older backends without the flag.
   Future<Plan?> getActivePlan() async {
     final plans = await listPlans();
-    return plans.isEmpty ? null : plans.first;
+    if (plans.isEmpty) return null;
+    return plans.firstWhere(
+      (p) => p.isSelected,
+      orElse: () => plans.first,
+    );
+  }
+
+  /// Completed plans (history), most recently completed first.
+  Future<List<Plan>> planHistory() async {
+    final data = await _client.get('/plans/history') as List;
+    return data
+        .map((e) => Plan.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// Switch the user's current plan. Non-destructive: only moves the flag.
+  Future<Plan> selectPlan(int planId) async {
+    final data = await _client.post('/plans/$planId/select');
+    final plan = (data as Map).cast<String, dynamic>()['plan'];
+    return Plan.fromJson((plan as Map).cast<String, dynamic>());
   }
 
   Future<void> deletePlan(int planId) async {

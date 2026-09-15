@@ -77,21 +77,27 @@ def test_invalid_difficulty_rejected(db_session, test_user_id):
     assert any("Invalid difficulty" in e for e in exc.value.details["errors"])
 
 
-def test_reimport_replaces_existing_plan(db_session, test_user_id):
-    """A second import replaces the first plan instead of accumulating."""
+def test_reimport_creates_second_plan_and_selects_it(db_session, test_user_id):
+    """A second import adds a new plan alongside the first and selects it.
+
+    Users can hold multiple plans; importing again must not delete history.
+    """
     content = fixtures.build_valid_workbook()
     first = ImportService(db_session, test_user_id).import_plan(content, START)
     second = ImportService(db_session, test_user_id).import_plan(content, START)
 
     plans = db_session.execute(select(Plan)).scalars().all()
-    assert len(plans) == 1
-    assert plans[0].id == second.plan.id
-    assert plans[0].id != first.plan.id
+    assert len(plans) == 2
+    assert {p.id for p in plans} == {first.plan.id, second.plan.id}
 
-    # Old plan's days must be gone (only the new plan's days remain).
+    # Both plans' days must still exist (56 each).
     days = db_session.execute(select(StudyDay)).scalars().all()
-    assert all(d.plan_id == second.plan.id for d in days)
-    assert len(days) == 56
+    assert len(days) == 112
+
+    # The most recently imported plan becomes the selected/active one.
+    selected = [p for p in plans if p.is_selected]
+    assert len(selected) == 1
+    assert selected[0].id == second.plan.id
 
 
 def test_failed_import_rolls_back_completely(db_session, test_user_id):

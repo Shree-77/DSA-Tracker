@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/notification_service.dart';
 import '../import_plan/import_plan_screen.dart';
+import '../plan/plan_switcher_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -62,11 +63,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListTile(
               title: Text(app.plan?.name ?? 'No plan imported'),
               subtitle: app.plan != null
-                  ? Text('${app.plan!.totalDays} days')
+                  ? Text(
+                      '${app.plan!.totalDays} days'
+                      '${app.plan!.isCompleted ? ' · Completed 🎉' : ''}',
+                    )
                   : const Text('Import an Excel plan to begin'),
               leading: const Icon(Icons.menu_book),
+              trailing: app.allPlans.length > 1
+                  ? const Icon(Icons.swap_horiz)
+                  : null,
+              onTap: app.plan != null ? () => _openSwitcher(context) : null,
             ),
           ),
+          const SizedBox(height: 8),
+
+          // Switch / view all plans + completed history
+          if (app.plan != null)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.library_books_outlined),
+                title: const Text('My Plans'),
+                subtitle: Text(
+                  '${app.allPlans.length} plan'
+                  '${app.allPlans.length == 1 ? '' : 's'}'
+                  ' · switch or review completed',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _openSwitcher(context),
+              ),
+            ),
           const SizedBox(height: 8),
 
           // Daily study goal
@@ -149,6 +174,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+    );
+  }
+
+  Future<void> _openSwitcher(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PlanSwitcherScreen()),
     );
   }
 

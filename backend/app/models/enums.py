@@ -5,6 +5,14 @@ from __future__ import annotations
 import enum
 
 
+class PlanStatus(str, enum.Enum):
+    """Lifecycle status of a study plan."""
+
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    ARCHIVED = "ARCHIVED"
+
+
 class StudyStatus(str, enum.Enum):
     """Lifecycle status of a single study day."""
 

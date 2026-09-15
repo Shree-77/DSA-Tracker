@@ -44,8 +44,18 @@ class StudyDayService:
             if field_name in data:
                 setattr(day, field_name, data[field_name])
 
+        status_changed = "status" in data and data["status"] is not None
+
         self.db.commit()
         self.db.refresh(day)
+
+        # A status change may complete the plan (all days DONE/SKIPPED) or
+        # reopen a completed one. Keep plan.status in sync automatically.
+        if status_changed:
+            from app.services.plan_service import PlanService
+
+            PlanService(self.db, self.user_id).sync_completion(day.plan_id)
+
         return StudyDayResponse.model_validate(day)
 
     def get_tracker(self, study_day_id: int) -> TrackerResponse | None:
