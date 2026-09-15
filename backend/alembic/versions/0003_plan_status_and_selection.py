@@ -81,4 +81,3 @@ def downgrade() -> None:
     op.drop_column("plans", "is_selected")
     op.drop_column("plans", "status")
     plan_status.drop(op.get_bind(), checkfirst=True)
-</content>
